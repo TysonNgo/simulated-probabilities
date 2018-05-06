@@ -117,7 +117,7 @@ class Hand:
             "three_of_a_kind",
             "two_pair",
             "pair",
-            "nothing"
+            "high_card"
         ]
 
     def get_hand_type(self):
@@ -139,7 +139,7 @@ class Hand:
             return "two_pair"
         if self.has_pair():
             return "pair"
-        return "nothing"
+        return "high_card"
 
     def has_royal_flush(self):
         return self.has_straight() and \
