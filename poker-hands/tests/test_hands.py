@@ -174,4 +174,4 @@ class TestHands(unittest.TestCase):
             if i in self.pair:
                 self.assertEqual(hand.get_hand_type(), "pair", msg=hand)
             if i == 0:
-                self.assertEqual(hand.get_hand_type(), None, msg=hand)
+                self.assertEqual(hand.get_hand_type(), "nothing", msg=hand)

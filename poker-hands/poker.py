@@ -105,6 +105,21 @@ class Hand:
         i = 0 if "2" in self else -1
         self.cards.sort(key=lambda c: c.values[i])
 
+    @staticmethod
+    def get_hand_types():
+        return [
+            "royal_flush",
+            "straight_flush",
+            "four_of_a_kind",
+            "full_house",
+            "flush",
+            "straight",
+            "three_of_a_kind",
+            "two_pair",
+            "pair",
+            "nothing"
+        ]
+
     def get_hand_type(self):
         if self.has_royal_flush():
             return "royal_flush"
@@ -124,6 +139,7 @@ class Hand:
             return "two_pair"
         if self.has_pair():
             return "pair"
+        return "nothing"
 
     def has_royal_flush(self):
         return self.has_straight() and \
