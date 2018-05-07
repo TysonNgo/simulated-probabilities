@@ -1,16 +1,65 @@
-var n;
-var l;
-var ctx = document.getElementById('chart').getContext('2d');
+var n, l;
+var trials;
+var selection;
+setN(document.getElementById('num-lines').value);
+setL(document.getElementById('num-legs').value);
+setTrials(document.getElementById('num-trials').value);
+var chart = document.getElementById('chart');
+var ctx = chart.getContext('2d');
+var selectCtx = document.getElementById('selected').getContext('2d');
+var prob = document.getElementById('probability');
+var probCtx = prob.getContext('2d');
+
+function setN(val){ // lines
+	n = Number(val);
+	n = n > 1 ? Math.round(n) : 2;
+}
+
+function setL(val){ // legs
+	l = Number(val);
+	l = l >= 0 ? Math.round(l) : 0;
+}
+
+function setTrials(val){
+	trials = Number(val);
+	trials = trials > 0 ? Math.round(trials) : 1
+}
+
+function setSelection(lines, val){
+	var s = document.getElementById('select-line');
+	s.min = 1;
+	s.max = lines.width;
+	selection = Number(val);
+	selection = selection ? Math.round(selection) : s.min;
+	selection = Math.min(selection, s.max);
+	document.getElementById('select-line').value = selection;
+}
+
+function disableInput(){
+	document.getElementById('num-lines').disabled = true;
+	document.getElementById('num-legs').disabled = true;
+	document.getElementById('num-trials').disabled = true;
+	document.getElementById('select-line').disabled = true;
+	document.getElementById('run').disabled = true;
+}
+function enableInput(){
+	document.getElementById('num-lines').disabled = false;
+	document.getElementById('num-legs').disabled = false;
+	document.getElementById('num-trials').disabled = false;
+	document.getElementById('select-line').disabled = false;
+	document.getElementById('run').disabled = false;
+}
 
 var Lines = function(lines, legs){
-	this.lines = [new Line()];
+	this.lines = [new Line(0)];
+	this.width =  lines;
+	this.height = legs;
 
-	for (var i=0; i<lines-1; i++){
-		var line = new Line();
+	for (var i=1; i<lines; i++){
+		var line = new Line(i);
 		var left = this.lines[this.lines.length-1];
 		line.left = left;
 		left.right = line;
-		line.i = i;
 		this.lines.push(line);
 	}
 
@@ -19,29 +68,14 @@ var Lines = function(lines, legs){
 		var pos = Math.floor(Math.random()*legs);
 		var dir = Math.round(Math.random()) ? 'left' : 'right';
 		var line = this.lines[Math.floor(Math.random()*this.lines.length)]
-		line.addLeg(pos, dir);
+		this.height = Math.max(this.height , line.addLeg(pos, dir));
 		legsLeft--;
-	}
-
-	this.getWidth = function(){
-		return this.lines.length;
-	}
-
-	this.getHeight = function(){
-		var h = 0;
-		for (var i=0; i<this.lines.length; i++){
-			h = Math.max(
-				h,
-				Object.keys(this.lines[i].legs)
-					.reduce((x, y)=> Math.max(Number(x), Number(y)))
-			)
-		}
-		return h;
 	}
 
 	this.getDestination = function(lineIndex){
 		var line = this.lines[lineIndex];
-		for (let i=0; i<=this.getHeight(); i++){
+		var h = this.height;
+		for (var i=0; i<h; i++){
 			if (i in line.legs){
 				line = line.legs[i];
 			}
@@ -50,7 +84,8 @@ var Lines = function(lines, legs){
 	}
 }
 
-var Line = function(){
+var Line = function(i){
+	this.i = i;
 	this.left = null;
 	this.right = null;
 	this.legs = {
@@ -79,27 +114,192 @@ var Line = function(){
 
 }
 
+var Probability = function(n){
+	this.p = Array(n).fill(0);
+	this.total = 0;
+
+	this.increment = function(i){
+		this.p[i]++;
+		this.total++;
+	}
+
+	this.getProbability = function(i){
+		return this.p[i]/this.total;
+	}
+}
+
 function on(event, elemId, onchange){
 	document.getElementById(elemId)['on'+event] = onchange;
 }
 
+function clearCanvas(ctx){
+	ctx.clearRect(0, 0, chart.width, chart.height);
+	ctx.beginPath();
+}
+
 function renderLines(lines){
+	clearCanvas(selectCtx);
+	clearCanvas(ctx);
+	var w = lines.width;
+	var h = lines.height;
+	var offsetY = chart.height*0.05;
+	var lineSpacing = chart.width/w;
+	var legSpacing = (chart.height-2*offsetY)/h;
+
+	var prevLegs = {};
+
+	/*
+	for (var i=0;i<h;i++){
+			ctx.fillText(i, 0, offsetY+i*legSpacing);
+	}
+	*/
+
+	for (var i=0; i<w; i++){
+		prevLegs[i] = {};
+		var x = i*lineSpacing+lineSpacing/2;
+		ctx.moveTo(x, 0);
+		ctx.lineTo(x, chart.height);
+
+		var line = lines.lines[i];
+		var legs = line.legs;
+
+		//if (i === w-1) break;
+
+		for (var l in line.legs){
+			if (i === 0 || (!(l in prevLegs[i-1]) || prevLegs[i-1][l].i !== i)){
+				ctx.moveTo(x, offsetY+l*legSpacing);
+				ctx.lineTo((i+1)*lineSpacing+lineSpacing/2, offsetY+l*legSpacing)
+			}
+			prevLegs[i][l] = line.legs[l];
+		}
+	}
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = '#000';
+	ctx.stroke()
 	
+	var x = (selection-1)*lineSpacing+lineSpacing/2;
+	ctx.beginPath();
+	ctx.strokeStyle = '#0f0'
+	ctx.lineWidth = 4;
+	ctx.moveTo(x, 0);
+	ctx.lineTo(x, chart.height);
+	ctx.stroke();
+}
+
+function drawLegs(lines, i){
+	clearCanvas(selectCtx);
+	var w = lines.width;
+	var h = lines.height;
+	var offsetY = chart.height*0.05;
+	var lineSpacing = chart.width/w;
+	var legSpacing = (chart.height-2*offsetY)/h;
+	var line = lines.lines[i];
+	
+	var x = lineSpacing*line.i+lineSpacing/2;
+	selectCtx.moveTo(x, 0);
+
+	for (var i=0; i<h; i++){
+		x = lineSpacing*line.i+lineSpacing/2;
+		if (i in line.legs){
+			selectCtx.lineTo(x, offsetY+i*legSpacing)
+
+			line = line.legs[i];
+			x = lineSpacing*line.i+lineSpacing/2;
+			selectCtx.lineTo(x, offsetY+i*legSpacing);
+			selectCtx.moveTo(x, offsetY+i*legSpacing);
+		}
+	}
+
+	x = lineSpacing*line.i+lineSpacing/2;
+	selectCtx.lineTo(x, chart.height)
+
+	selectCtx.lineWidth = 7;
+	selectCtx.strokeStyle = '#f00';
+	selectCtx.stroke();
 
 }
 
-on('change', 'num-people', function(e){
-	n = Number(e.target.value);
-	n = n > 1 ? Math.round(n) : 2;
-	renderLines();
-})
+function renderProbability(lines, probability){
+	clearCanvas(probCtx);
+
+	var w = lines.width;
+	var h = prob.height*0.80;
+	var lineSpacing = chart.width/w;
+
+	for (var i=0; i<w; i++){
+		var per = probability.getProbability(i);
+		var x = i*lineSpacing+lineSpacing/2;
+		probCtx.moveTo(x, h);
+		probCtx.lineTo(x, h-h*per);
+		probCtx.strokeStyle = '#00f';
+		probCtx.lineWidth = 10;
+		probCtx.stroke();
+	}
+
+	probCtx.fillText('distribution', 0, prob.height);
+	//probCtx.fillText(probability.getProbability(0), 0, prob.height);
+}
+
+function runTrials(){
+	return new Promise(function(resolve, reject){
+		var p = new Probability(lines.width);
+		for (var i = 0; i<trials; i++){
+			lines = new Lines(n, l);
+			var r = trials <= 1000 ? 1000/trials : 1;
+			var d = lines.getDestination(selection-1).i;
+
+			p.increment(d);
+
+			if (i <= 1000){
+				(function(lines, p){
+					setTimeout(function (){
+						renderLines(lines);
+						drawLegs(lines, selection-1);
+						if (i === trials-1){
+							resolve();
+						}
+					}, r*i);
+				})(lines, p);
+			}
+		}
+		setTimeout(function(){
+			renderProbability(lines, p);
+			resolve();
+		}, 1100);
+	});
+}
+
+lines = new Lines(n, l)
+document.getElementById('select-line').disabled = false;
+setSelection(lines, 1);
+renderLines(lines)
 
 on('change', 'num-lines', function(e){
-	l = Number(e.target.value);
-	l = l >= 0 ? Math.round(l) : 0;
-	renderLines();
+	setN(e.target.value);
+	lines = new Lines(n, l);
+	clearCanvas(probCtx);
+	renderLines(lines);
+})
+
+on('change', 'num-legs', function(e){
+	setL(e.target.value);
+	lines = new Lines(n, l);
+	clearCanvas(probCtx);
+	renderLines(lines);
+})
+
+on('change', 'num-trials', function(e){
+	setTrials(e.target.value);
+})
+
+on('change', 'select-line', function(e){
+	setSelection(lines, e.target.value);
+	clearCanvas(probCtx);
+	renderLines(lines)
 })
 
 on('click', 'run', function(e){
-	alert(1)
+	disableInput();
+	clearCanvas(probCtx);
+	runTrials().then(function(){enableInput()});
 })

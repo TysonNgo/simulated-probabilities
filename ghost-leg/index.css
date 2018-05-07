@@ -3,7 +3,23 @@ input{
 }
 canvas{
 	border: 1px solid #ddd;
+	padding: 1em;
 }
+.container{
+	position: relative;
+	display: block;
+	margin: 3em;
+}
+#chart, #selected, #probability{
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+#selected{
+	border: none;
+	z-index: 1000;
+}
+
 body{
 	margin: 1em 20%;
 }

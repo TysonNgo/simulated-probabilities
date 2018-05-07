@@ -5,11 +5,17 @@
 	<link rel="stylesheet" type="text/css" href="index.css">
 </head>
 <body>
-<label for="num-people">Number of people</label><input id="num-people" type="number" value="2" />
-<label for="num-lines">Number of lines</label><input id="num-lines" type="number" value="2" />
+<label for="num-lines">Number of lines</label><input id="num-lines" type="number" value="4" />
+<label for="num-legs">Number of legs</label><input id="num-legs" type="number" value="2" />
+<label for="num-trials">Number of trials</label><input id="num-trials" type="number" value="1000" />
+<label for="select-line">Select a line</label><input id="select-line" type="number" disabled />
 
-<div class="container">
+<div class="container" style="height: 400px; width: 400px;">
 	<canvas id="chart" width="400" height="400"></canvas>
+	<canvas id="selected" width="400" height="400"></canvas>
+</div>
+<div class="container" style="height: 100px; width: 400px">
+	<canvas id="probability" width="400" height="100"></canvas>
 </div>
 
 <button id="run">RUN SIMULATION</button>
