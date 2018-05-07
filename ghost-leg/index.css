@@ -1,0 +1,15 @@
+input{
+	display: block;
+}
+canvas{
+	border: 1px solid #ddd;
+}
+body{
+	margin: 1em 20%;
+}
+label{
+
+}
+label:after{
+	content: ": ";
+}
