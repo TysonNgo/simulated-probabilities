@@ -179,8 +179,8 @@ function renderLines(lines){
 	
 	var x = (selection-1)*lineSpacing+lineSpacing/2;
 	ctx.beginPath();
-	ctx.strokeStyle = '#0f0'
-	ctx.lineWidth = 4;
+	ctx.strokeStyle = '#00f'
+	ctx.lineWidth = 5;
 	ctx.moveTo(x, 0);
 	ctx.lineTo(x, chart.height);
 	ctx.stroke();
@@ -213,8 +213,8 @@ function drawLegs(lines, i){
 	x = lineSpacing*line.i+lineSpacing/2;
 	selectCtx.lineTo(x, chart.height)
 
-	selectCtx.lineWidth = 7;
-	selectCtx.strokeStyle = '#f00';
+	selectCtx.lineWidth = 5;
+	selectCtx.strokeStyle = 'rgba(255,0,0,0.8)';
 	selectCtx.stroke();
 
 }
@@ -269,6 +269,15 @@ function runTrials(){
 	});
 }
 
+function run(e){
+	disableInput();
+	clearCanvas(probCtx);
+	runTrials().then(function(){
+		enableInput();
+		e.target.focus();
+	});
+}
+
 lines = new Lines(n, l)
 document.getElementById('select-line').disabled = false;
 setSelection(lines, 1);
@@ -298,8 +307,24 @@ on('change', 'select-line', function(e){
 	renderLines(lines)
 })
 
-on('click', 'run', function(e){
-	disableInput();
-	clearCanvas(probCtx);
-	runTrials().then(function(){enableInput()});
-})
+on('click', 'run', run)
+
+function enter(e){
+	if (e.which === 13){
+		e.preventDefault();
+		run(e);
+	}
+}
+document.getElementById('num-lines').onkeydown = enter;
+document.getElementById('num-legs').onkeydown = enter;
+document.getElementById('num-trials').onkeydown = enter;
+document.getElementById('select-line').onkeydown = function(e){
+	enter(e);
+	if (e.which === 9){
+		console.log(e)
+		e.preventDefault();
+		document.getElementById('num-lines').focus();
+	}
+}
+
+document.getElementById('num-lines').focus();
