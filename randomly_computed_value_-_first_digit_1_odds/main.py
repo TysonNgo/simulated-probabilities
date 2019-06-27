@@ -24,7 +24,7 @@ def compute(n, rand_int):
 	return n
 
 def first_digit(n):
-	n = int(n)
+	n = abs(int(n))
 	digit = 0
 	while n > 0:
 		digit = n % 10
@@ -35,8 +35,14 @@ def is_1st_digit_1(n):
 	digit = first_digit(n)
 	return digit == 1
 
+def print_p(p):
+	tot = float(sum(p.values()))
+	for i in xrange(1, 10):
+		per = round(p[i]/tot*100, 3)
+		print(str(per)+'% chance that the first digit of a number after applying numerous operations is '+str(i))
+
 if __name__ == '__main__':
-	trials = 200000
+	trials = 2000000
 	p = {}
 	rand_int = 9999
 	num_values = 60
@@ -50,9 +56,19 @@ if __name__ == '__main__':
 		else:
 			p[d1] = 1
 
-		print (c)
+		print (i, c)
+
+	print ('='*32)
+	print ('Including 0')
+	print ('='*32)
+	print_p(p)
+	print ('='*32)
+
+	if 0 in p:
+		del p[0]
 
 	tot = float(sum(p.values()))
-	for i in xrange(1, 10):
-		per = round(p[i]/tot*100, 3)
-		print(str(per)+'%% chance that the first digit of a number after applying numerous operations is '+str(i))
+
+	print ('Excluding 0')
+	print ('='*32)
+	print_p(p)
